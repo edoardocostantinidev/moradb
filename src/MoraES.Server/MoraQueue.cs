@@ -1,24 +1,28 @@
 using System.Collections.Generic;
+using MoraES.Model;
 
-public class MoraQueue : PriorityQueue<string, ulong>
+namespace MoraES
 {
-    /// <summary>
-    /// Peeks an entire range of timestamps
-    /// </summary>
-    /// <param name="start"></param>
-    /// <param name="end"></param>
-    /// <returns></returns>
-    public IEnumerable<string> PeekRange(ulong start, ulong end)
+    public class MoraQueue : PriorityQueue<MoraEvent, ulong>
     {
-        List<string> range = new List<string>();
-        var enumerator = this.UnorderedItems.GetEnumerator();
-        while (enumerator.MoveNext())
+        /// <summary>
+        /// Peeks an entire range of timestamps
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        public IEnumerable<MoraEvent> PeekRange(ulong start, ulong end)
         {
-            var curr = enumerator.Current;
-            if (start < curr.Priority && curr.Priority < end)
-                range.Add(curr.Element);
+            List<MoraEvent> range = new List<MoraEvent>();
+            var enumerator = this.UnorderedItems.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                var curr = enumerator.Current;
+                if (start < curr.Priority && curr.Priority < end)
+                    range.Add(curr.Element);
+            }
+            return range.AsReadOnly();
         }
-        return range.AsReadOnly();
-    }
 
+    }
 }

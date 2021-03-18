@@ -13,11 +13,11 @@ namespace MoraES
         {
             MoraLogger.Info("MoraES starting up...🚀");
             this.Configure();
-            MoraServer moraServer = new MoraServer(IPAddress.Any, port);
+            MoraEventHandler moraEventHandler = new MoraEventHandler();
+            MoraServer moraServer = new MoraServer(moraEventHandler, IPAddress.Any, port);
+            moraEventHandler.Start();
             moraServer.Start();
-            
-            MoraLogger.Info("Press a key to exit");
-            System.Console.ReadLine();
+            while(true){}
         }
 
         private void Configure()

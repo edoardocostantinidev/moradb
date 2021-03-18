@@ -1,6 +1,7 @@
 ﻿
+using System;
 using System.Net;
-using System.Threading.Tasks;
+using MoraES.Model;
 
 namespace MoraES.Client
 {
@@ -8,29 +9,37 @@ namespace MoraES.Client
     {
         static void Main(string[] args)
         {
-            MoraESClient moraEsClient = new MoraESClient(IPAddress.Loopback, 2626);
+            var address = Environment.GetEnvironmentVariable("SERVER_ADDRESS") ?? "moraes";
+            var port = int.Parse(Environment.GetEnvironmentVariable("SERVER_PORT") ?? "2626");
+            var dnsEndpoint = new DnsEndPoint(address, port);
+            MoraESClient moraEsClient = new MoraESClient(, 2626);
             MoraLogger.Info("Connecting to MoraES Server...");
             moraEsClient.Connect();
             MoraLogger.Info("Connected to MoraES Server ✅");
-            Task.Run(async delegate
+            try
             {
-                for (; ; )
-                {
-                    await Task.Delay(5000);
-                    MoraLogger.Info("Sending message...📧");
-                    if (moraEsClient.IsConnected)
-                    {
-                        moraEsClient.Send("Test");
-                        MoraLogger.Info("Sent! 📨");
-                        var response = moraEsClient.Receive(64);
-                        MoraLogger.Info(response);
-                    }
+                SendMessage(moraEsClient);
+            }
+            catch (System.Exception ex)
+            {
+                MoraLogger.Error(ex.Message);
+            }
+            while (true) { }
+        }
 
-                }
-            });
-            MoraLogger.Info("Press a key to exit");
-            System.Console.ReadLine();
-
+        private static void SendMessage(MoraESClient moraEsClient)
+        {
+            MoraLogger.Info("Sending message...📧");
+            if (moraEsClient.IsConnected)
+            {
+                var timestamp = (ulong)(DateTimeOffset.UtcNow).Add(new TimeSpan(0, 0, 10)).ToUnixTimeMilliseconds();
+                MoraEvent moraEvent = new MoraEvent(timestamp, ContentTypeEnum.BINARY, new byte[4]);
+                var bytes = moraEvent.ToByteArray();
+                moraEsClient.Send(bytes, 0, bytes.Length);
+                MoraLogger.Info("Sent! 📨");
+                var response = moraEsClient.Receive(64);
+                MoraLogger.Info(response);
+            }
         }
     }
 }

@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  server:
+    build:
+      context: .
+      dockerfile: dockerfile-server
+    ports:
+      - 2626
+  client:
+    build:
+      context: .
+      dockerfile: dockerfile-client
+    depends_on:
+      - server

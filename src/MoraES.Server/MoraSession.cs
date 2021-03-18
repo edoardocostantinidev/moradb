@@ -1,16 +1,19 @@
+using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
+using MoraES.Model;
 using NetCoreServer;
 
 namespace MoraES.Network
 {
 
-    internal class MoraSession : TcpSession
+    public class MoraSession : TcpSession
     {
-        public MoraSession(TcpServer server) : base(server)
+        private readonly MoraEventHandler _moraEventHandler;
+        public MoraSession(TcpServer server, MoraEventHandler moraEventHandler) : base(server)
         {
+            _moraEventHandler = moraEventHandler;
         }
 
         protected override void OnConnected()
@@ -30,15 +33,30 @@ namespace MoraES.Network
 
         protected override void OnReceived(byte[] buffer, long offset, long size)
         {
-            string message = Encoding.UTF8.GetString(buffer, (int)offset, (int)size);
-            MoraLogger.Info($"Received: {message}");
+            var moraEvent = ConvertBytesToMoraEvent(buffer, size);
+            MoraLogger.Info($"Received event: timestamp {moraEvent.timestamp}, contentType {moraEvent.contentType}");
+            _moraEventHandler.Schedule(moraEvent);
             this.Send($"OK {this.Id}!");
         }
+        private MoraEvent ConvertBytesToMoraEvent(byte[] buffer, long size)
+        {
+            var timestamp = BitConverter.ToUInt64(buffer, 0);
+            var contentType = (ContentTypeEnum)BitConverter.ToUInt16(buffer, sizeof(ulong));
+            var headerLength = sizeof(ulong) - sizeof(ushort);
+            var payloadLength = size - headerLength;
+            var payload = new byte[payloadLength];
+            Array.Copy(buffer, headerLength, payload, 0, payloadLength);
+            return new MoraEvent(timestamp, contentType, payload);
 
+        }
     }
     internal class MoraServer : TcpServer
     {
-        public MoraServer(IPAddress address, int port) : base(address, port) { }
+        private readonly MoraEventHandler _moraEventHandler;
+        public MoraServer(MoraEventHandler moraEventHandler, IPAddress address, int port) : base(address, port)
+        {
+            _moraEventHandler = moraEventHandler;
+        }
 
         protected override void OnStarted()
         {
@@ -55,7 +73,7 @@ namespace MoraES.Network
         }
         protected override TcpSession CreateSession()
         {
-            return new MoraSession(this);
+            return new MoraSession(this, this._moraEventHandler);
         }
         protected override void OnError(SocketError error)
         {

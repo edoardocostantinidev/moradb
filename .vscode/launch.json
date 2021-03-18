@@ -5,21 +5,32 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core Launch (console)",
+            "name": "client",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/bin/Debug/<insert-target-framework-here>/<insert-project-name-here>.dll",
+            "program": "${workspaceFolder}/src/MoraES.Client/bin/Debug/net6.0/MoraES.Client.dll",
             "args": [],
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/src/MoraES.Client",
             "console": "internalConsole",
-            "stopAtEntry": false
+            "stopAtEntry": false,
+            "logging": {
+                "moduleLoad": false,
+            }
         },
         {
-            "name": ".NET Core Attach",
+            "name": "server",
             "type": "coreclr",
-            "request": "attach",
-            "processId": "${command:pickProcess}"
-        }
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/MoraES.Server/bin/Debug/net6.0/MoraES.Server.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/MoraES.Server",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "logging": {
+                "moduleLoad": false,
+            }
+        },
     ]
 }
